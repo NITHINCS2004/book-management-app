@@ -1,6 +1,7 @@
 const app = require('./app');
 const mongoose = require('mongoose');
 require('dotenv').config();
+app.use('/uploads', express.static('uploads'));
 
 const PORT = process.env.PORT || 5000;
 
