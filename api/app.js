@@ -13,5 +13,6 @@ app.use(express.json());
 // Mount API routes
 app.use('/api/auth', authRoutes); // POST /api/auth/register, /api/auth/login
 app.use('/api/books', bookRoutes);
+app.use('/uploads', express.static('uploads'));
 
 module.exports = app;
