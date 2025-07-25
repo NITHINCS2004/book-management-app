@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+require('dotenv').config();
+
 const authRoutes = require('./routes/auth');
 const bookRoutes = require('./routes/book');
 
@@ -19,8 +21,9 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
 
-// Serve uploads statically
-app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', express.static('uploads'));
+// ✅ Routes
+const bookRoutes = require('./routes/books');
 
 // Mount routes
 app.use('/api/auth', authRoutes);
