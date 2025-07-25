@@ -1,4 +1,4 @@
-import React from 'react';
+/*import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SignUpPage from './pages/SignUpPage';
 import LoginPage from './pages/LoginPage';
@@ -15,6 +15,29 @@ function App() {
         <Route path="*" element={<div>404 - Page not found</div>} />
       </Routes>
     </Router>
+  );
+}
+
+export default App;
+*/
+
+
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import SignUpPage from './pages/SignUpPage';
+import LoginPage from './pages/LoginPage';
+import AdminDashboard from './pages/AdminDashboard';
+import UserDashboard from './pages/UserDashboard';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/user-dashboard" element={<UserDashboard />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
