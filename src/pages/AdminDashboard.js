@@ -14,7 +14,8 @@ function AdminDashboard() {
     setBooks(res.data);
   };
 
-  useEffect(() => { fetchBooks(); }, []);
+  //useEffect(() => { fetchBooks(); }, []);
+  useEffect(() => { fetchBooks(); }, [fetchBooks]);
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
