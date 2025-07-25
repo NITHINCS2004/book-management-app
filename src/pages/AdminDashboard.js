@@ -79,6 +79,7 @@ function AdminDashboard() {
 export default AdminDashboard;
 */
 // frontend/src/components/AdminDashboard.js
+// frontend/src/components/AdminDashboard.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
@@ -109,23 +110,23 @@ function AdminDashboard() {
     };
 
     const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        setFile(file);
+        const imgFile = e.target.files[0];
+        setFile(imgFile);
 
-        if (file) {
+        if (imgFile) {
             const reader = new FileReader();
             reader.onloadend = () => {
                 const base64Data = reader.result;
-                localStorage.setItem(file.name, base64Data);
+                localStorage.setItem(imgFile.name, base64Data);
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(imgFile);
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!file) return alert('Please select a file');
+        if (!file) return alert('Please select an image');
 
         try {
             await axios.post(
@@ -189,12 +190,12 @@ function AdminDashboard() {
                 />
                 <input
                     type="file"
-                    accept=".pdf,.epub,.docx"
+                    accept="image/*"
                     onChange={handleFileChange}
                     required={!editId}
                 />
                 <button type="submit" style={{ marginLeft: '10px' }}>
-                    {editId ? 'Replace Book' : 'Add Book'}
+                    {editId ? 'Replace Image' : 'Add Book'}
                 </button>
             </form>
 
@@ -210,45 +211,18 @@ function AdminDashboard() {
                         <h4>{book.title}</h4>
                         <p>By {book.author}</p>
                         {(() => {
-                            const stored = localStorage.getItem(`book-${book._id}`);
-                            if (!stored) return <span style={{ color: 'gray' }}>📄 No file</span>;
+                            const stored = localStorage.getItem(book.fileUrl);
+                            if (!stored) return <span style={{ color: 'gray' }}>📷 No image</span>;
 
-                            try {
-                                const file = JSON.parse(stored);
-                                const byteCharacters = atob(file.data.split(',')[1]); // remove base64 header
-                                const byteArrays = [];
-
-                                for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-                                    const slice = byteCharacters.slice(offset, offset + 512);
-                                    const byteNumbers = new Array(slice.length);
-                                    for (let i = 0; i < slice.length; i++) {
-                                        byteNumbers[i] = slice.charCodeAt(i);
-                                    }
-                                    byteArrays.push(new Uint8Array(byteNumbers));
-                                }
-
-                                const blob = new Blob(byteArrays, { type: 'application/pdf' });
-                                const blobUrl = URL.createObjectURL(blob);
-
-                                return (
-                                    <>
-                                        <button
-                                            onClick={() => window.open(blobUrl, '_blank')}
-                                            className="btn btn-sm btn-primary me-2"
-                                        >
-                                            📖 View
-                                        </button>
-                                        <a href={blobUrl} download={file.name} className="btn btn-sm btn-success">
-                                            📥 Download
-                                        </a>
-                                    </>
-                                );
-                            } catch (e) {
-                                console.error('Failed to load file from localStorage', e);
-                                return <span style={{ color: 'red' }}>⚠️ Invalid file</span>;
-                            }
+                            return (
+                                <>
+                                    <img src={stored} alt={book.title} style={{ maxWidth: '200px', display: 'block', marginBottom: '10px' }} />
+                                    <a href={stored} download={book.fileUrl} className="btn btn-sm btn-success">
+                                        📥 Download Image
+                                    </a>
+                                </>
+                            );
                         })()}
-
 
                         <div style={{ marginTop: '10px' }}>
                             <button onClick={() => handleReplace(book)} style={{ marginRight: '10px' }}>
