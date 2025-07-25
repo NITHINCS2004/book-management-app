@@ -1,4 +1,4 @@
-import logo from './logo.svg';
+/*import logo from './logo.svg';
 import './App.css';
 
 function App() {
@@ -15,10 +15,32 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn Reacts
+          Learn Reacts.js
         </a>
       </header>
     </div>
+  );
+}
+
+export default App;
+*/
+
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import SignUpPage from './pages/SignUpPage';
+import LoginPage from './pages/LoginPage';
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        {/* These will be created later */}
+        <Route path="/admin-dashboard" element={<div>Admin Dashboard</div>} />
+        <Route path="/user-dashboard" element={<div>User Dashboard</div>} />
+      </Routes>
+    </Router>
   );
 }
 
