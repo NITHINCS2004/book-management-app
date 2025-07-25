@@ -78,108 +78,152 @@ function AdminDashboard() {
 
 export default AdminDashboard;
 */
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 function AdminDashboard() {
-    const [books, setBooks] = useState([]);
-    const [form, setForm] = useState({ title: '', author: '' });
-    const [file, setFile] = useState(null);
-    const [editId, setEditId] = useState(null);
-    const token = localStorage.getItem('token');
+  const [books, setBooks] = useState([]);
+  const [form, setForm] = useState({ title: '', author: '' });
+  const [file, setFile] = useState(null);
+  const [editId, setEditId] = useState(null);
+  const token = localStorage.getItem('token');
 
-    const fetchBooks = async () => {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/books`, {
-            headers: { Authorization: `Bearer ${token}` }
+  // Fetch all books from the backend
+  const fetchBooks = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/books`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBooks(res.data);
+    } catch (err) {
+      console.error('Error fetching books:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
+  // Form input change handler
+  const handleChange = e => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // File input change handler
+  const handleFileChange = e => {
+    setFile(e.target.files[0]);
+  };
+
+  // Handle submit for add/replace book
+  const handleSubmit = async e => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append('title', form.title);
+    formData.append('author', form.author);
+    if (file) formData.append('bookFile', file);
+
+    try {
+      if (editId) {
+        await axios.put(`${process.env.REACT_APP_API_URL}/api/books/${editId}`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
         });
-        setBooks(res.data);
-    };
-
-    useEffect(() => { fetchBooks(); }, []);
-
-    const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
-    const handleFileChange = e => setFile(e.target.files[0]);
-
-    const handleSubmit = async e => {
-        e.preventDefault();
-        const formData = new FormData();
-        formData.append('title', form.title);
-        formData.append('author', form.author);
-        if (file) formData.append('bookFile', file);
-
-        try {
-            let res;
-            if (editId) {
-                res = await axios.put(`${process.env.REACT_APP_API_URL}/api/books/${editId}`, formData, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
-            } else {
-                res = await axios.post(`${process.env.REACT_APP_API_URL}/api/books`, formData, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
-            }
-
-            console.log('✅ Upload response:', JSON.stringify(res.data, null, 2));
-
-            setForm({ title: '', author: '' });
-            setFile(null);
-            setEditId(null);
-            fetchBooks();
-        } catch (err) {
-            console.error('❌ Upload error:', err.response ? JSON.stringify(err.response.data) : err.message);
-        }
-    };
-
-
-    const handleReplace = book => {
-        setEditId(book._id);
-        setForm({ title: book.title, author: book.author });
-    };
-
-    const handleDelete = async id => {
-        await axios.delete(`${process.env.REACT_APP_API_URL}/api/books/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
+      } else {
+        await axios.post(`${process.env.REACT_APP_API_URL}/api/books`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
         });
-        fetchBooks();
-    };
+      }
 
-    return (
-        <div>
-            <h2>Admin Dashboard</h2>
+      setForm({ title: '', author: '' });
+      setFile(null);
+      setEditId(null);
+      fetchBooks();
+    } catch (err) {
+      console.error('Error uploading book:', err.response?.data || err.message);
+    }
+  };
 
-            <form onSubmit={handleSubmit}>
-                <input name="title" placeholder="Title" value={form.title} onChange={handleChange} required />
-                <input name="author" placeholder="Author" value={form.author} onChange={handleChange} required />
-                <input type="file" accept=".pdf,.epub,.docx" onChange={handleFileChange} required={!editId} />
-                <button type="submit">{editId ? 'Replace Book' : 'Add Book'}</button>
-            </form>
+  // Replace mode
+  const handleReplace = book => {
+    setEditId(book._id);
+    setForm({ title: book.title, author: book.author });
+    setFile(null); // clear file input
+  };
 
-            <h3>Books:</h3>
-            {books.length === 0 ? (
-                <p>No books available.</p>
-            ) : (
-                books.map(book => (
-                    <div key={book._id}>
-                        <h4>{book.title}</h4>
-                        <p>By {book.author}</p>
-                        <a href={book.fileUrl} target="_blank" rel="noopener noreferrer">
-                            Download {book.title}
-                        </a>
+  // Delete book
+  const handleDelete = async id => {
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/books/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchBooks();
+    } catch (err) {
+      console.error('Error deleting book:', err.response?.data || err.message);
+    }
+  };
 
-                        <button onClick={() => handleReplace(book)}>Replace</button>
-                        <button onClick={() => handleDelete(book._id)}>Delete</button>
-                    </div>
-                ))
+  return (
+    <div style={{ padding: '20px' }}>
+      <h2>Admin Dashboard</h2>
+
+      <form onSubmit={handleSubmit} style={{ marginBottom: '20px' }}>
+        <input
+          name="title"
+          placeholder="Title"
+          value={form.title}
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="author"
+          placeholder="Author"
+          value={form.author}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="file"
+          accept=".pdf,.epub,.docx"
+          onChange={handleFileChange}
+          required={!editId}
+        />
+        <button type="submit" style={{ marginLeft: '10px' }}>
+          {editId ? 'Replace Book' : 'Add Book'}
+        </button>
+      </form>
+
+      <h3>Books:</h3>
+      {books.length === 0 ? (
+        <p>No books available.</p>
+      ) : (
+        books.map(book => (
+          <div key={book._id} style={{ border: '1px solid #ccc', marginBottom: '15px', padding: '10px' }}>
+            <h4>{book.title}</h4>
+            <p>By {book.author}</p>
+            {book.fileUrl && (
+              <a href={book.fileUrl} target="_blank" rel="noopener noreferrer">
+                📥 Download Book
+              </a>
             )}
-        </div>
-    );
+            <div style={{ marginTop: '10px' }}>
+              <button onClick={() => handleReplace(book)} style={{ marginRight: '10px' }}>
+                Replace
+              </button>
+              <button onClick={() => handleDelete(book._id)} style={{ color: 'red' }}>
+                Delete
+              </button>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
 }
 
 export default AdminDashboard;
