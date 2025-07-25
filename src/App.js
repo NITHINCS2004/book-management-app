@@ -32,6 +32,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+       <Route path="/" element={<div>Welcome! Go to <a href="/signup">Signup</a> or <a href="/login">Login</a></div>} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
