@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const userRoutes = require('./routes/userRoutes'); // example
-const bookRoutes = require('./routes/bookRoutes'); // example
+
 
 const app = express();
 app.use(cors({ origin: 'https://your-frontend.vercel.app', credentials: true }));
