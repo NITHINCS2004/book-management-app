@@ -3,47 +3,29 @@ const router = express.Router();
 const Book = require('../models/Book');
 const verifyToken = require('../middleware/verifyToken');
 
-// Create Book (Admin only)
-router.post('/', verifyToken, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Access denied' });
-
-  try {
-    const book = new Book(req.body);
-    await book.save();
-    res.status(201).json(book);
-  } catch (err) {
-    res.status(400).json({ error: 'Invalid book data' });
-  }
-});
-
-// Get all books (any user)
+// GET all books
 router.get('/', verifyToken, async (req, res) => {
   const books = await Book.find();
   res.json(books);
 });
 
-// Update book (Admin only)
-router.put('/:id', verifyToken, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Access denied' });
-
-  try {
-    const updated = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(updated);
-  } catch (err) {
-    res.status(400).json({ error: 'Update failed' });
-  }
+// POST a new book
+router.post('/', verifyToken, async (req, res) => {
+  const newBook = new Book(req.body);
+  await newBook.save();
+  res.json(newBook);
 });
 
-// Delete book (Admin only)
-router.delete('/:id', verifyToken, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Access denied' });
+// PUT update a book
+router.put('/:id', verifyToken, async (req, res) => {
+  const updated = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  res.json(updated);
+});
 
-  try {
-    await Book.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Book deleted' });
-  } catch (err) {
-    res.status(400).json({ error: 'Delete failed' });
-  }
+// DELETE a book
+router.delete('/:id', verifyToken, async (req, res) => {
+  await Book.findByIdAndDelete(req.params.id);
+  res.json({ message: 'Book deleted' });
 });
 
 module.exports = router;

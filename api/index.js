@@ -11,3 +11,6 @@ mongoose.connect(process.env.MONGO_URI)
     });
   })
   .catch((err) => console.error(err));
+
+const bookRoutes = require('./routes/book');
+app.use('/api/books', bookRoutes); 
