@@ -210,46 +210,42 @@ function AdminDashboard() {
                         <h4>{book.title}</h4>
                         <p>By {book.author}</p>
                         {(() => {
-                            const localBook = localStorage.getItem(`book-${book._id}`);
-                            if (localBook) {
-                                try {
-                                    const bookData = JSON.parse(localBook);
-                                    const byteString = atob(bookData.data.split(',')[1]);
-                                    const mimeString = bookData.data.split(',')[0].split(':')[1].split(';')[0];
+                            const stored = localStorage.getItem(`book-${book._id}`);
+                            if (!stored) return <span style={{ color: 'gray' }}>📄 No file</span>;
 
-                                    const ab = new ArrayBuffer(byteString.length);
-                                    const ia = new Uint8Array(ab);
-                                    for (let i = 0; i < byteString.length; i++) {
-                                        ia[i] = byteString.charCodeAt(i);
+                            try {
+                                const file = JSON.parse(stored);
+                                const byteCharacters = atob(file.data.split(',')[1]); // remove base64 header
+                                const byteArrays = [];
+
+                                for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                                    const slice = byteCharacters.slice(offset, offset + 512);
+                                    const byteNumbers = new Array(slice.length);
+                                    for (let i = 0; i < slice.length; i++) {
+                                        byteNumbers[i] = slice.charCodeAt(i);
                                     }
-
-                                    const blob = new Blob([ab], { type: mimeString });
-                                    const fileUrl = URL.createObjectURL(blob);
-
-                                    return (
-                                        <>
-                                            <a
-                                                href={fileUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                style={{ marginRight: '10px' }}
-                                            >
-                                                📖 View Book
-                                            </a>
-                                            <a
-                                                href={fileUrl}
-                                                download={book.title.replace(/\s+/g, '_') + '.pdf'}
-                                            >
-                                                📥 Download Book
-                                            </a>
-                                        </>
-                                    );
-                                } catch (err) {
-                                    console.error('Failed to parse book from localStorage:', err);
-                                    return null;
+                                    byteArrays.push(new Uint8Array(byteNumbers));
                                 }
-                            } else {
-                                return <span style={{ color: 'gray' }}>No file in localStorage</span>;
+
+                                const blob = new Blob(byteArrays, { type: 'application/pdf' });
+                                const blobUrl = URL.createObjectURL(blob);
+
+                                return (
+                                    <>
+                                        <button
+                                            onClick={() => window.open(blobUrl, '_blank')}
+                                            className="btn btn-sm btn-primary me-2"
+                                        >
+                                            📖 View
+                                        </button>
+                                        <a href={blobUrl} download={file.name} className="btn btn-sm btn-success">
+                                            📥 Download
+                                        </a>
+                                    </>
+                                );
+                            } catch (e) {
+                                console.error('Failed to load file from localStorage', e);
+                                return <span style={{ color: 'red' }}>⚠️ Invalid file</span>;
                             }
                         })()}
 
