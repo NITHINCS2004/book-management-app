@@ -10,7 +10,7 @@ app.use(cors({ origin: 'https://book-management-app-iupm.vercel.app', credential
 
 app.use(express.json());
 
-// ✅ Mount API routes
+// Mount API routes
 app.use('/api/auth', authRoutes); // POST /api/auth/register, /api/auth/login
 app.use('/api/books', bookRoutes);
 
