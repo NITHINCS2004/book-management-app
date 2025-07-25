@@ -1,21 +1,18 @@
 const express = require('express');
-const router = express.Router();
 const multer = require('multer');
+const router = express.Router();
 const Book = require('../models/Book');
 const verifyToken = require('../middleware/verifyToken');
 
-// Multer setup (memory storage for MongoDB)
+// Multer memory storage for buffer
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// 📌 Upload book with image buffer
+// POST: Upload book with image
 router.post('/', verifyToken, upload.single('image'), async (req, res) => {
   try {
-    console.log('Incoming data:', req.body);
-    console.log('Uploaded file:', req.file);
-
     const { title, author } = req.body;
-    if (!title || !author || !req.file) {
+    if (!req.file || !title || !author) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
@@ -29,14 +26,14 @@ router.post('/', verifyToken, upload.single('image'), async (req, res) => {
     });
 
     await newBook.save();
-    res.status(201).json(newBook);
+    res.status(201).json({ message: 'Book saved' });
   } catch (err) {
-    console.error('Error uploading book:', err); // 👈 this line will help
+    console.error('Error uploading book:', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-// 📌 Get all books
+// GET: All books
 router.get('/', verifyToken, async (req, res) => {
   try {
     const books = await Book.find();
@@ -44,7 +41,9 @@ router.get('/', verifyToken, async (req, res) => {
       _id: book._id,
       title: book.title,
       author: book.author,
-      image: `data:${book.image.contentType};base64,${book.image.data.toString('base64')}`,
+      image: book.image?.data
+        ? `data:${book.image.contentType};base64,${book.image.data.toString('base64')}`
+        : null,
     }));
     res.status(200).json(booksWithImage);
   } catch (err) {
@@ -52,11 +51,11 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-// 📌 Delete book
+// DELETE: Remove a book
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
-    const book = await Book.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: 'Book deleted', book });
+    const deleted = await Book.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: 'Book deleted', deleted });
   } catch (err) {
     res.status(500).json({ error: 'Error deleting book' });
   }
