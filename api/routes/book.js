@@ -11,6 +11,9 @@ const upload = multer({ storage });
 // 📌 Upload book with image buffer
 router.post('/', verifyToken, upload.single('image'), async (req, res) => {
   try {
+    console.log('Incoming data:', req.body);
+    console.log('Uploaded file:', req.file);
+
     const { title, author } = req.body;
     if (!title || !author || !req.file) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -28,7 +31,7 @@ router.post('/', verifyToken, upload.single('image'), async (req, res) => {
     await newBook.save();
     res.status(201).json(newBook);
   } catch (err) {
-    console.error('Error uploading book:', err);
+    console.error('Error uploading book:', err); // 👈 this line will help
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
