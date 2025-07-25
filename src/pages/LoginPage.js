@@ -13,9 +13,11 @@ function LoginPage() {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', form);
+      const res = await axios.post('https://book-management-app-y2o1.onrender.com/api/auth/login', form);
+      
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('role', res.data.role);
+      
       if (res.data.role === 'admin') {
         navigate('/admin-dashboard');
       } else {
