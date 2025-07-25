@@ -108,27 +108,35 @@ function AdminDashboard() {
         formData.append('author', form.author);
         if (file) formData.append('bookFile', file);
 
-        if (editId) {
-            await axios.put(`${process.env.REACT_APP_API_URL}/api/books/${editId}`, formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-        } else {
-            await axios.post(`${process.env.REACT_APP_API_URL}/api/books`, formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-        }
+        try {
+            let res;
+            if (editId) {
+                res = await axios.put(`${process.env.REACT_APP_API_URL}/api/books/${editId}`, formData, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+            } else {
+                res = await axios.post(`${process.env.REACT_APP_API_URL}/api/books`, formData, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+            }
 
-        setForm({ title: '', author: '' });
-        setFile(null);
-        setEditId(null);
-        fetchBooks();
+            console.log('✅ Upload response:', JSON.stringify(res.data, null, 2));
+
+            setForm({ title: '', author: '' });
+            setFile(null);
+            setEditId(null);
+            fetchBooks();
+        } catch (err) {
+            console.error('❌ Upload error:', err.response ? JSON.stringify(err.response.data) : err.message);
+        }
     };
+
 
     const handleReplace = book => {
         setEditId(book._id);
