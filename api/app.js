@@ -4,11 +4,8 @@ const authRoutes = require('./routes/auth'); // ADD THIS when auth.js is present
 
 const app = express();
 
-app.use(cors({
-   origin: 'https://book-management-app-iupm.vercel.app',
+app.use(cors({ origin: 'https://book-management-app-iupm.vercel.app', credentials: true }));
 
-  credentials: true
-}));
 
 app.use(express.json());
 
