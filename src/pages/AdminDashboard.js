@@ -209,20 +209,50 @@ function AdminDashboard() {
                     >
                         <h4>{book.title}</h4>
                         <p>By {book.author}</p>
-                        {book.fileName && localStorage.getItem(book.fileName) && (
-                            <a
-                                href={URL.createObjectURL(
-                                    new Blob(
-                                        [Uint8Array.from(atob(localStorage.getItem(book.fileName)), c => c.charCodeAt(0))],
-                                        { type: 'application/pdf' }
-                                    )
-                                )}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                📖 View Book
-                            </a>
-                        )}
+                        {(() => {
+                            const localBook = localStorage.getItem(`book-${book._id}`);
+                            if (localBook) {
+                                try {
+                                    const bookData = JSON.parse(localBook);
+                                    const byteString = atob(bookData.data.split(',')[1]);
+                                    const mimeString = bookData.data.split(',')[0].split(':')[1].split(';')[0];
+
+                                    const ab = new ArrayBuffer(byteString.length);
+                                    const ia = new Uint8Array(ab);
+                                    for (let i = 0; i < byteString.length; i++) {
+                                        ia[i] = byteString.charCodeAt(i);
+                                    }
+
+                                    const blob = new Blob([ab], { type: mimeString });
+                                    const fileUrl = URL.createObjectURL(blob);
+
+                                    return (
+                                        <>
+                                            <a
+                                                href={fileUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                style={{ marginRight: '10px' }}
+                                            >
+                                                📖 View Book
+                                            </a>
+                                            <a
+                                                href={fileUrl}
+                                                download={book.title.replace(/\s+/g, '_') + '.pdf'}
+                                            >
+                                                📥 Download Book
+                                            </a>
+                                        </>
+                                    );
+                                } catch (err) {
+                                    console.error('Failed to parse book from localStorage:', err);
+                                    return null;
+                                }
+                            } else {
+                                return <span style={{ color: 'gray' }}>No file in localStorage</span>;
+                            }
+                        })()}
+
 
                         <div style={{ marginTop: '10px' }}>
                             <button onClick={() => handleReplace(book)} style={{ marginRight: '10px' }}>
