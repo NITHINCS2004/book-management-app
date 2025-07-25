@@ -1,30 +1,28 @@
-
-// backend/routes/book.js
 const express = require('express');
 const router = express.Router();
 const Book = require('../models/Book');
 const verifyToken = require('../middleware/verifyToken');
 
-// ✅ POST: Upload book metadata
+// POST: Save book with base64 image
 router.post('/', verifyToken, async (req, res) => {
   try {
-    const { title, author, fileName } = req.body;
+    const { title, author, imageData } = req.body;
 
-    if (!title || !author || !fileName) {
+    if (!title || !author || !imageData) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
-    const newBook = new Book({ title, author, fileUrl: fileName });
+    const newBook = new Book({ title, author, imageData });
     await newBook.save();
 
     res.status(201).json(newBook);
   } catch (err) {
-    console.error('Error uploading metadata:', err);
+    console.error('Error uploading book:', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-// ✅ GET all books
+// GET all books
 router.get('/', verifyToken, async (req, res) => {
   try {
     const books = await Book.find();
@@ -34,7 +32,7 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-// ✅ DELETE book by ID
+// DELETE book
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const book = await Book.findByIdAndDelete(req.params.id);

@@ -110,17 +110,7 @@ function AdminDashboard() {
     };
 
     const handleFileChange = (e) => {
-        const imgFile = e.target.files[0];
-        setFile(imgFile);
-
-        if (imgFile) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64Data = reader.result;
-                localStorage.setItem(imgFile.name, base64Data);
-            };
-            reader.readAsDataURL(imgFile);
-        }
+        setFile(e.target.files[0]);
     };
 
     const handleSubmit = async (e) => {
@@ -128,28 +118,32 @@ function AdminDashboard() {
 
         if (!file) return alert('Please select an image');
 
-        try {
-            await axios.post(
-                `${process.env.REACT_APP_API_URL}/api/books`,
-                {
-                    title: form.title,
-                    author: form.author,
-                    fileName: file.name,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json',
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            try {
+                await axios.post(
+                    `${process.env.REACT_APP_API_URL}/api/books`,
+                    {
+                        title: form.title,
+                        author: form.author,
+                        imageData: reader.result, // base64 image
                     },
-                }
-            );
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
 
-            setForm({ title: '', author: '' });
-            setFile(null);
-            fetchBooks();
-        } catch (err) {
-            console.error('Error uploading book:', err);
-        }
+                setForm({ title: '', author: '' });
+                setFile(null);
+                fetchBooks();
+            } catch (err) {
+                console.error('Error uploading book:', err);
+            }
+        };
+        reader.readAsDataURL(file);
     };
 
     const handleReplace = (book) => {
@@ -210,19 +204,20 @@ function AdminDashboard() {
                     >
                         <h4>{book.title}</h4>
                         <p>By {book.author}</p>
-                        {(() => {
-                            const stored = localStorage.getItem(book.fileUrl);
-                            if (!stored) return <span style={{ color: 'gray' }}>📷 No image</span>;
-
-                            return (
-                                <>
-                                    <img src={stored} alt={book.title} style={{ maxWidth: '200px', display: 'block', marginBottom: '10px' }} />
-                                    <a href={stored} download={book.fileUrl} className="btn btn-sm btn-success">
-                                        📥 Download Image
-                                    </a>
-                                </>
-                            );
-                        })()}
+                        {book.imageData ? (
+                            <>
+                                <img
+                                    src={book.imageData}
+                                    alt={book.title}
+                                    style={{ maxWidth: '200px', display: 'block', marginBottom: '10px' }}
+                                />
+                                <a href={book.imageData} download={`${book.title}.png`}>
+                                    📥 Download Image
+                                </a>
+                            </>
+                        ) : (
+                            <span style={{ color: 'gray' }}>📷 No image</span>
+                        )}
 
                         <div style={{ marginTop: '10px' }}>
                             <button onClick={() => handleReplace(book)} style={{ marginRight: '10px' }}>
