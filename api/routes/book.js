@@ -1,35 +1,3 @@
-/*const express = require('express');
-const router = express.Router();
-const Book = require('../models/Book');
-const verifyToken = require('../middleware/verifyToken');
-
-// GET all books
-router.get('/', verifyToken, async (req, res) => {
-  const books = await Book.find();
-  res.json(books);
-});
-
-// POST a new book
-router.post('/', verifyToken, async (req, res) => {
-  const newBook = new Book(req.body);
-  await newBook.save();
-  res.json(newBook);
-});
-
-// PUT update a book
-router.put('/:id', verifyToken, async (req, res) => {
-  const updated = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(updated);
-});
-
-// DELETE a book
-router.delete('/:id', verifyToken, async (req, res) => {
-  await Book.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Book deleted' });
-});
-
-module.exports = router;
-*/
 const express = require('express');
 const router = express.Router();
 const Book = require('../models/Book');
@@ -39,14 +7,14 @@ const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// ✅ Configure Cloudinary with environment variables
+// ✅ Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// ✅ Setup Cloudinary Storage for Multer
+// ✅ Configure Cloudinary Storage with Multer
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -59,39 +27,61 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
-// 🔽 GET all books
+/* 
+====================
+    API ROUTES
+====================
+*/
+
+// ✅ GET all books
 router.get('/', verifyToken, async (req, res) => {
-  const books = await Book.find();
-  res.json(books);
-});
-
-// 🔽 POST a new book with file (Cloudinary URL stored)
-router.post('/', verifyToken, upload.single('bookFile'), async (req, res) => {
-  const { title, author } = req.body;
-  const fileUrl = req.file?.path || '';
-
-  const newBook = new Book({ title, author, fileUrl });
-  await newBook.save();
-  res.json(newBook);
-});
-
-// 🔽 PUT to replace a book file and/or details
-router.put('/:id', verifyToken, upload.single('bookFile'), async (req, res) => {
-  const { title, author } = req.body;
-  const updateData = { title, author };
-
-  if (req.file) {
-    updateData.fileUrl = req.file.path;
+  try {
+    const books = await Book.find();
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  const updated = await Book.findByIdAndUpdate(req.params.id, updateData, { new: true });
-  res.json(updated);
 });
 
-// 🔽 DELETE a book
+// ✅ POST a new book with file upload
+router.post('/', verifyToken, upload.single('bookFile'), async (req, res) => {
+  try {
+    const { title, author } = req.body;
+    const fileUrl = req.file?.path || '';
+
+    const newBook = new Book({ title, author, fileUrl });
+    await newBook.save();
+    res.status(201).json(newBook);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ PUT update a book (can replace file too)
+router.put('/:id', verifyToken, upload.single('bookFile'), async (req, res) => {
+  try {
+    const { title, author } = req.body;
+    const updateData = { title, author };
+
+    if (req.file) {
+      updateData.fileUrl = req.file.path;
+    }
+
+    const updated = await Book.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ DELETE a book
 router.delete('/:id', verifyToken, async (req, res) => {
-  await Book.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Book deleted' });
+  try {
+    await Book.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Book deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
